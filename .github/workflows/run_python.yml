@@ -1,11 +1,16 @@
-name: Print message
+name: Generate Not-Secret
 
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ['Generate Not-Secret']
+    types:
+      - completed
 
 jobs:
   run-python:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
 
@@ -19,3 +24,25 @@ jobs:
 
       - name: Execute script
         run: python script.py
+
+      - name: Check Line Count
+        id: checker
+        run: |
+          COUNT=$(python -c "print(len(open('./storage/data.txt').readlines()))")
+          echo "Current count is: $COUNT"
+          echo "line_count=$COUNT" >> $GITHUB_OUTPUT
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github
+          git add storage/data.txt
+          git commit -m "Add random data (Count: ${{ steps.checker.outputs.line_count }})"
+
+      - name: Decide to repeat
+        if: ${{ steps.checker.outputs.line_count < 50 }}
+        run: |
+          echo "Count is under 50. Triggering another run..."
+          gh workflow run run_python.yml
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
