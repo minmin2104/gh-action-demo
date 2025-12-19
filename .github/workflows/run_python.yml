@@ -2,10 +2,6 @@ name: Generate Not-Secret
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows: ['Generate Not-Secret']
-    types:
-      - completed
 
 jobs:
   run-python:
@@ -37,7 +33,7 @@ jobs:
       - name: Commit and Push Changes
         run: |
           git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github
+          git config --global user.email 'github-actions[bot]@users.noreply.github'
           git add storage/data.txt
           git commit -m "Add random data (Count: ${{ steps.checker.outputs.line_count }})" || exit 0
           git push
